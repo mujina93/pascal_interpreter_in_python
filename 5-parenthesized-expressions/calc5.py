@@ -1,14 +1,18 @@
 """
 Interpreter for arithmetic expressions. (i.e. calculator)
-This version can handle arithmetic expressions, from grammar:
-m_expr: factor ((*|/) factor)*
-expr: m_expr ((+|-) m_expr)*
+This version can handle arithmetic expressions, with parentheses,
+from grammar:
+expr    : m_expr ((+|-) m_expr)*
+m_expr  : p_term ((*|/) p_term)*
+p_term  : paren | factor
+paren   : LEFTPAR expr RIGHTPAR
 factor: INTEGER
 """
 
 # Types of tokens:
-# numbers, summation signs (+,-), multiplication signs (*,/), EOF
-INTEGER, S_SIGN, M_SIGN, EOF = 'INTEGER', '+|-', '*|/', 'EOF'
+# numbers, summation signs (+,-), multiplication signs (*,/),
+# parentheses ( ), EOF
+INTEGER, S_SIGN, M_SIGN, EOF, PAR = 'INTEGER', '+|-', '*|/', 'EOF', '(|)'
 
 """
 class representing a token.
@@ -34,8 +38,9 @@ class Token(object):
         """
         string representation of the class instance
         Examples:
-            Token(INTEGER, 3)
+            Token(INTEGER, 34)
             Token(SIGN, '+')
+            Token(PAR, ')')
         """
         return 'Token({type}, {value})'.format(
             type = self.type,
@@ -62,6 +67,7 @@ recognize and parse and get tokens, ignoring whitespaces.
 class Lexer(object):
     summation_signs = ['+','-']
     multiplication_signs = ['*','/']
+    parentheses_simbols = ['(',')']
     def __init__(self, text):
         # client string input
         self.text = text
@@ -91,6 +97,11 @@ class Lexer(object):
         sign = self.current_char
         self.advance()
         return sign
+    # parses a parenthesis symbol
+    def parse_parenthesis(self):
+        par = self.current_char
+        self.advance()
+        return par
     """
     method that reads on and gets the next token in the text.
     OUTPUT: It can return an integer token, a sign token, raise an
@@ -113,6 +124,9 @@ class Lexer(object):
             # multiplication or division
             if self.current_char in self.multiplication_signs:
                 return Token(M_SIGN, self.parse_sign())
+            # parentheses symbols
+            if self.current_char in self.parentheses_simbols:
+                return Token(PAR, self.parse_parenthesis())
             # parsing error if no known token was found
             self.error()
         # end of file reached if current_char is None
@@ -143,7 +157,7 @@ class Interpreter(object):
             # raise syntax error
             self.error()
     """
-    method referring to 'factor' word in grammar (see at the beginning)
+    method referring to 'factor' term in grammar (see at the beginning)
     factor : INTEGER
     OUTPUT: an INTEGER token
     """
@@ -152,27 +166,62 @@ class Interpreter(object):
         self.eat(INTEGER)
         return token.value
     """
+    method referring to 'paren' term in grammar
+    paren   : LEFTPAR expr RIGHTPAR
+    This is a parenthesized full expression
+    """
+    def paren(self):
+        # the current character should be an open parenthesis
+        open_par = self.current_token
+        # eat out the open parenthesis, and start
+        # reading in the expression
+        self.eat(PAR)
+        # extract the value inside the parentheses
+        inside_expr = self.expr()
+        # throw away the closing parenthesis
+        close_par = self.current_token
+        # eat the closing parenthesis away
+        self.eat(PAR)
+        # return the value of the inside expression
+        return inside_expr
+    """
+    method referring to 'p_term' term in grammar
+    p_term  : paren | factor
+    This is either a parenthesized expression, or a simple INTEGER factor
+    OUTPUT: result of the parenthesized expression, or the integer
+    """
+    def p_term(self):
+        # either return the number (if this element is an integer)
+        if self.current_token.type == INTEGER:
+            return self.factor()
+        # or return the expression between the parentheses (if
+        # the current_char is an open parenthesis)
+        elif self.current_token.type == PAR:
+            return self.paren()
+        else:
+            raise Exception("Expecting either a number or an open parenthesis")
+    """
     method referring to 'm_expr' in the grammar (multiplication expression)
-    m_expr: factor (M_SIGN factor)*
+    m_expr  : p_term ((*|/) p_term)*
     OUTPUT: a number with the result of the chain of multiplications/divisions
     """
     def m_expr(self):
         # first 'factor' term in the 'expr' definition
-        result = self.factor()
+        result = self.p_term()
         # go on with the chain
         while self.current_token.type == M_SIGN:
             token = self.current_token
             self.eat(M_SIGN)
             if token.value == '*':
-                result = result * self.factor()
+                result = result * self.p_term()
             elif token.value == '/':
-                result = result / self.factor()
+                result = result / self.p_term()
         # returns the result of the expression
         return result
     """
     method for 'expr' in the grammar (summations chain of m_expressions)
-    expr: m_expr (S_SIGM m_expr)*
-    OUTPUT: an number with the result of the chain
+    expr    : m_expr ((+|-) m_expr)*
+    OUTPUT: an number with the result of the chain of summations
     """
     def expr(self):
         # read and compute the first multiplicative expression
