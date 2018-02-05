@@ -2,3 +2,9 @@
 Following the series of articles: [Let's Build a Simple Interpreter](https://ruslanspivak.com/lsbasi-part1/)
 
 # Part 1 - arithmetic expressions interpreter (calculator)
+Handles binary operations (with whitespaces between)
+
+# Part 2 - extended calculator
+Handles binary operations (any operator) and repeated operations (only with + and -)
+
+
