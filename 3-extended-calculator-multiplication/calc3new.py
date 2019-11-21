@@ -55,44 +55,88 @@ class Lexer:
             if self.current_char.isspace():
                 self.skip_whitespace()
             elif self.current_char.isdigit():
-                return Token(token_types.INTEGER, self.parse_integer())
+                return Token(token_types.INTEGER, self.parse_integer_token_value())
             elif self.current_char in self.alg_sum_signs:
-                return Token(token_types.ALG_SUM_SIGN, self.parse_alg_sum_sign_atom())
+                return Token(token_types.ALG_SUM_SIGN, self.parse_alg_sum_sign_token_value())
             elif self.current_char in self.alg_mul_signs:
-                return Token(token_types.ALG_MUL_SIGN, self.parse_alg_mul_sign_atom())
+                return Token(token_types.ALG_MUL_SIGN, self.parse_alg_mul_sign_token_value())
             else:
                 self.lexing_error()
         return Token(token_types.EOF, None)
 
     def skip_whitespace(self):
-        while self.current_char is not None and self.current_char.isspace():
+        while self.current_char is not EOF and self.current_char.isspace():
             self.advance()
 
-    def parse_integer_atom(self):
+    def parse_integer_token_value(self):
+        number = ""
+        while self.current_char is not EOF and self.current_char.isdigit():
+            number += self.current_char
+            self.advance()
+        if number == "": self.lexing_error()
+        return int(number)
 
-    def parse_alg_sum_sign_atom(self):
+    def parse_alg_sum_sign_token_value(self):
+        sign = self.current_char
+        self.advance()
+        return sign
 
-    def parse_alg_mul_sign_atom(self):
+    def parse_alg_mul_sign_token_value(self):
+        sign = self.current_char
+        self.advance()
+        return sign
 
+    def __iter__(self):
+        while True:
+            token =  self.get_next_token()
+            if token.type == token_types.EOF:
+                return
+            else:
+                yield token
 
 class Parser:
     def eat_token(self):
-
+        pass
     def parse_expression(self):
-
+        pass
 
 class Interpreter:
     pass
 
-if __name__ == '__main__':
-    # REPL
+
+def test_lexer():
+    with open('sample.txt', 'r') as f:
+        text = f.read()
+    print("Sample is")
+    print(text)
+    l = Lexer(text)
+    print("Lexing:")
     while True:
-        try:
-            text = input('calc> ')
-        except EOFError:
-            break
-        if not text: continue
-        lexer = Lexer(text)
-        parser = Parser(lexer)
-        result = Interpreter(parser)
-        print(result)
+        token = l.get_next_token()
+        print(token)
+        if token.type == token_types.EOF: break
+
+def test_lexer_iter():
+    with open('sample.txt', 'r') as f:
+        text = f.read()
+    print("Sample is")
+    print(text)
+    l = Lexer(text)
+    print("Lexing:")
+    for token in l:
+        print(token)
+
+if __name__ == '__main__':
+    # test_lexer()
+    test_lexer_iter()
+    # # REPL
+    # while True:
+    #     try:
+    #         text = input('calc> ')
+    #     except EOFError:
+    #         break
+    #     if not text: continue
+    #     lexer = Lexer(text)
+    #     parser = Parser(lexer)
+    #     result = Interpreter(parser)
+    #     print(result)
