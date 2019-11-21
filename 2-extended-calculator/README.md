@@ -1,5 +1,5 @@
 # Part 2 - extended calculator         
-Handles binary operations (any operator) and repeated operations (only$
+Handles binary operations (any operator) and repeated operations 
 Try with
 ```
 $ python3 calc2.py

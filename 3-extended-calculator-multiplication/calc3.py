@@ -207,12 +207,13 @@ class Interpreter(object):
         # try to parse and interpret a first expression of type
         # INTEGER SIGN INTEGER. Compute the result. After this,
         # current_token will be set on the next token.
-        # op_type is '+' or '*', denoting an algebric sum or multiplication
+        # op_type is '+' or '*', denoting an algebraic sum or multiplication
         # (i.e. + or -, OR * or /)
         result, op_type = self.parse_ISI()
+        print(result, op_type)
         term = Token(INTEGER, result)
         # if the first operation was an algebric sum, go on looking
-        # for algebric sums. Otherwise, go on looking for algebric
+        # for algebric sums. Otherwise, go on looking for algebraic
         # multiplications.
         if op_type == '+':
             allowed_signs = ['+','-']

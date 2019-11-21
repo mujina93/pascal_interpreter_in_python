@@ -5,34 +5,39 @@ Interpreter for arithmetic expressions. (i.e. calculator)
 # Types of tokens
 INTEGER, SIGN, EOF = 'INTEGER', 'SIGN', 'EOF'
 
-"""
-class representing a token. In the calculator case, the tokens can
-only be numbers, the operation signs ('+', '-','*','/') or 'EOF'
-(denoting end of file).
-Internally, the token is represented by a type (see types above)
-and a value (the specific number, or the specific symbol, or None)
-"""
+
 class Token(object):
+    """
+    class representing a token. In the calculator case, the tokens can
+    only be numbers, the operation signs ('+', '-','*','/') or 'EOF'
+    (denoting end of file).
+    Internally, the token is represented by a type (see types above)
+    and a value (the specific number, or the specific symbol, or None)
+    """
+
     def __init__(self, type, value):
-        # token type: INTEGER, PLUS, or EOF
+        """
+        :param type: token type: INTEGER, PLUS, or EOF
+        :param value: token value: 0, 1, ..., 9, '+',..., '/', None
+        """
         self.type = type
-        # token value: 0, 1, ..., 9, '+',..., '/', None
         self.value = value
-    """
-    str represents the object in readable way, as a user
-    would want to read it
-    """
+
     def __str__(self):
         """
+        str represents the object in readable way, as a user
+        would want to read it
+
         string representation of the class instance
         Examples:
             Token(INTEGER, 3)
             Token(SIGN, '+')
         """
         return 'Token({type}, {value})'.format(
-            type = self.type,
-            value = repr(self.value)
+            type=self.type,
+            value=repr(self.value)
         )
+
     """
     implement __repr__ for any class you implement. The goal is
     to give an unambiguous description (not necessarily readable or
@@ -42,17 +47,19 @@ class Token(object):
     In a container (for example, a list of Tokens in this case), the
     representation of the container's elements makes use of __repr__
     and not __str__.
-    The aim of __repr__ is also that of giving meaningful loggin information
+    The aim of __repr__ is also that of giving meaningful logging information
     """
     def __repr__(self):
         return self.__str__()
 
-"""
-Interpreter class. This class can read some text (simply initialize it
-with the text, like Interpreter(mytext)) and interpret it, with .expr().
-It will return the result.
-"""
+
 class Interpreter(object):
+    """
+    Interpreter class. This class can read some text (simply initialize it
+    with the text, like Interpreter(mytext)) and interpret it, with .expr().
+    It will return the result.
+    """
+
     def __init__(self, text):
         # client string input, e.g. "3+5"
         self.text = text
@@ -77,7 +84,7 @@ class Interpreter(object):
         text = self.text
 
         """
-        increase self.pos (the first time, self.pos is se to 0
+        increase self.pos (the first time, self.pos is set to 0
         in this way)
         """
         self.pos += 1
@@ -87,7 +94,7 @@ class Interpreter(object):
         input left to convert into tokens
         """
         if self.pos > len(text) - 1:
-            return Token(EOF,None)
+            return Token(EOF, None)
         """
         get a character at the positions self.pos and decide
         what token to create based on the single character
@@ -97,7 +104,7 @@ class Interpreter(object):
         """
         look for a valid token. Ignore whitespaces
         """
-        while(True):
+        while (True):
             """
             if a whitespace is parsed, ignore it and read on,
             until the lexer/scanner finds a non-whitespace character
@@ -129,13 +136,13 @@ class Interpreter(object):
             """
             self.error()
 
-    """
-    scans the text starting from the current self.current_char,
-    and looks for a number (that may be composed of more than one
-    digit. One the whole number is read, the control is passed back
-    to the get_next_token method)
-    """
     def look_for_number(self):
+        """
+        scans the text starting from the current self.current_char,
+        and looks for a number (that may be composed of more than one
+        digit. One the whole number is read, the control is passed back
+        to the get_next_token method)
+        """
         text = self.text
         # string representing the read number.
         # all the digits that are read are added to this string,
@@ -156,56 +163,57 @@ class Interpreter(object):
                 # are of course no more digits to be read. That's why we have
                 # all this block inside the above 'if'.
                 next_char = text[self.pos + 1]
-                while(next_char.isdigit()):
+                while (next_char.isdigit()):
                     # add the single digit to the number
                     number_token += next_char
                     """
                     if the next character is still a digit, we remain
                     in the while loop, and the digit is added. Otherwise,
                     the number that has been read so far is returned as
-                    a whole token, and the controls returns to get_next_token
+                    a whole token, and the control returns to get_next_token
                     method, which will analyze this token for other possibilites
                     (if this is a whitespace, every control will fail, and the
                     whitespace will be ignored.)
-                    NOTE: since we are in the loop because we know that the next
+                    NOTE: we are in the loop because we know that the next
                     character was a digit. Therefore, in the following line,
                     self.current_char will ALWAYS be equal to a digit.
-                    WHY do we do all of this? Because we want to respect the
+                    WHY do we do all of this? Because we want to adhere to the
                     convention that all the 'look_for_*' methods exit leaving
-                    self.current_char pointed to the last character of the token
-                    that they have found. Not the next one! The duty of advancing
+                    self.current_char pointing to the last character of the token
+                    that they have found (not the next one!) The duty of advancing
                     self.current_char after all the 'look_for_*' methods are invoked
                     is left to the method get_next_token(). (The new advancement is
                     the line before the while loop in get_next_token).
                     """
                     self.current_char = next_char
                     # then parse the next character
-                    self.pos +=1
+                    self.pos += 1
                     next_char = text[self.pos + 1]
         # return a number if a number was found
         if number_token != "":
             return number_token
         else:
             return None
-    """
-    analogous to look_for_number(), this method reads the current
-    character, trying to understand if this is an operation sign or
-    not. If it is, return it as a token. Otherwise, return None.
-    """
+
     def look_for_operation(self):
+        """
+        analogous to look_for_number(), this method reads the current
+        character, trying to understand if this is an operation sign or
+        not. If it is, return it as a token. Otherwise, return None.
+        """
         # if an operation sign is found, return it, and that
         # will then be taken as value for the Token object
-        operation_signs = ['+','-','*','/']
+        operation_signs = ['+', '-', '*', '/']
         if self.current_char in operation_signs:
             return self.current_char
         else:
             return None
-    """
-    use this function to check a token's type. Is it of the type
-    you were expecting? if not, raise an error
-    """
+
     def eat(self, token_type):
         """
+        use this function to check a token's type. Is it of the type
+        you were expecting? if not, raise an error
+
         compare the current token type with the passed token
         type and if they match, then "eat" the current token
         and assign the next token to the self.current_token,
@@ -216,17 +224,16 @@ class Interpreter(object):
         else:
             self.error()
 
-    """
-    this method starts reading the expression that the client wrote.
-    It reads it, character after character, expecting an expression
-    of type INTEGER PLUS INTEGER (therefore, just 3 characters, with
-    2 integers and a plus sign between. NO WHITESPACES ANYWHERE! THIS
-    IS REALLY STRICT!)
-    If the expression is correct, and no error was rised, the interpreter
-    finally interprets the expression, returning the sum of the two integers.
-    """
     def expr(self):
         """
+        this method starts reading the expression that the client wrote.
+        It reads it, character after character, expecting an expression
+        of type INTEGER PLUS INTEGER (therefore, just 3 tokens, with
+        2 integers and a plus sign between. NO WHITESPACES ANYWHERE! THIS
+        IS REALLY STRICT!)
+        If the expression is correct, and no error was raised, the interpreter
+        finally interprets the expression, returning the sum of the two integers.
+
         expr -> INTEGER SIGN INTEGER
         set current token to the first token taken from the input
         """
@@ -244,7 +251,7 @@ class Interpreter(object):
         character. Again, if there are whitespaces in between, they get
         ignored. Our hope is that the first non-whitespace character is
         an operation sign, so that the next evaluation with eat(SIGN)
-        will be successfull.
+        will be successful.
         """
         self.eat(INTEGER)
 
@@ -264,15 +271,17 @@ class Interpreter(object):
         result of adding two integers, thus effectively interpreting
         client input
         """
-        if(op.value == '+'):
+        if op.value == '+':
             result = left.value + right.value
-        elif(op.value == '-'):
+        elif op.value == '-':
             result = left.value - right.value
-        elif(op.value == '*'):
+        elif op.value == '*':
             result = left.value * right.value
-        elif(op.value == '/'):
+        elif op.value == '/':
             result = left.value / right.value
         return result
+
+
 # END INTERPRETER CLASS
 
 # main loop function
@@ -287,13 +296,14 @@ def main():
         # and wait for an input text
         if not text:
             continue
-        # Constructs and Interpreter object
-        # The inrepreter reads and store the written text
+        # Constructs an Interpreter object
+        # The inrepreter reads and stores the written text
         interpreter = Interpreter(text)
         # parse and interpret the expression
         result = interpreter.expr()
         # give the result (if any)
         print(result)
+
 
 if __name__ == '__main__':
     """

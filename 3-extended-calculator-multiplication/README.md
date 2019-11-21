@@ -1,5 +1,5 @@
 # Part 3 - extended calculator (sums and multiplications)
-Handles binary operations, and repeated operations (only with consiste$
+Handles binary operations, and repeated operations, both sums and multiplications 
 Try it with:
 ```
 $ python3 calc3.py
