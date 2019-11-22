@@ -6,18 +6,26 @@ This version can handle expressions like:
 * arbitrary chains of multiplications/divisions (with whitespaces)
 """
 
-# Types of tokens
-import types
-token_types_names = ['INTEGER','ALG_SUM_SIGN','ALG_MUL_SIGN','EOF']
-token_types = types.SimpleNamespace(**{k:k for k in token_types_names})
-# token_types can be accessed like a namespace or an object or an enum.
-# e.g. token_types.INTEGER is the type of the INTEGER token
 
 class Character:
     pass
+
+
 EOF = Character()
 
+
+# Types of tokens
+import types
+token_types_names = ['INTEGER','ALG_SUM_SIGN','ALG_MUL_SIGN','EOF']
+token_types = types.SimpleNamespace(**{k: k for k in token_types_names})
+# token_types can be accessed like a namespace or an object or an enum.
+# e.g. token_types.INTEGER is the type of the INTEGER token
+
+
 class Token:
+    """
+    a.k.a. Terminal (= leaf in ast)
+    """
     def __init__(self, type, value):
         # token type e.g. token_types.INTEGER
         self.type = type
@@ -87,18 +95,86 @@ class Lexer:
         return sign
 
     def __iter__(self):
+        """
+        Iterator interface.
+        Usage:
+            for token in Lexer(text):
+                print(token) # Does NOT output EOF token at the end
+        :return:
+        """
         while True:
-            token =  self.get_next_token()
+            token = self.get_next_token()
             if token.type == token_types.EOF:
                 return
             else:
                 yield token
 
+
+class NonTerminal:
+    """
+    General node in ast
+    """
+    def __init__(self, type, value):
+        self.type = type
+        self.value = value
+
+    # TODO implement this as a generic node with arbitrary amount of children
+
+
+
 class Parser:
-    def eat_token(self):
-        pass
+    def __init__(self, lexer: Lexer):
+        self.lexer = lexer
+        # self.current_token = self.lexer.get_next_token() # get 1st in init
+        self.tokens = [token for token in self.lexer]
+
+    def parsing_error(self, msg):
+        if not msg:
+            raise Exception(
+                f"Error parsing input.\n"
+                f"Token {self.current_token}\n")
+                # TODO add some context
+        else:
+            raise Exception(msg)
+
+    def advance_parser(self, token_type):
+        """
+        # TODO probably this function is not needed
+        Advance parser
+        :return:
+        """
+        if self.current_token is None:
+            self.parsing_error(f"Parsing error. self.current_token is still uninitialized.")
+
+        ## Check token type
+        if self.current_token.type == token_type:
+            ## Advances token to next
+            self.current_token = self.lexer.get_next_token()
+        else:
+            self.parsing_error()
+
     def parse_expression(self):
-        pass
+        """
+        Parse expression of type sexpr ("sum expression")
+        with:
+            sexpr : mexpr (alg_sum_sign mexpr)*
+            alg_sum_sign: + | -
+            mexpr : term (alg_mul_sign term)*
+            alg_mul_sign: * | /
+            term: integer : nonzerodigit (digit)*
+        :return:
+        """
+        ast = self.parse_sexpr(self.tokens)
+        return ast
+
+    def parse_sexpr(self, tokens):
+       """
+       Parse sexpr:
+            sexpr : mexpr (alg_sum_sign mexpr)*
+       :param tokens:
+       :return:
+       """
+
 
 class Interpreter:
     pass
